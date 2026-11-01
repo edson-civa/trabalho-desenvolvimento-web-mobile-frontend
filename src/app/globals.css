@@ -47,3 +47,128 @@ a {
     color-scheme: dark;
   }
 }
+
+/* 1. Banner do PromoCarousel */
+.banner-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.banner-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(124, 58, 237, 0.25) !important;
+}
+
+/* 2. Botão Principal de Compra */
+.buy-btn-hover {
+  transition: transform 0.2s ease, background-color 0.2s ease !important;
+}
+
+.buy-btn-hover:hover {
+  background-color: #6D28D9 !important;
+  transform: scale(1.03);
+}
+
+/* 3. Botões de Navegação (Setas do Carrossel) */
+.nav-btn-hover {
+  transition: transform 0.2s ease, background-color 0.2s ease !important;
+}
+
+.nav-btn-hover:hover {
+  background-color: #6D28D9 !important;
+  color: #ffffff !important;
+  transform: scale(1.1);
+}
+
+/* 4. Cards de Jogos (Grid) */
+.game-card-hover {
+  display: block;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+  border-radius: 1rem; /* 16px para acompanhar o rounded-4 */
+  padding: 0.5rem;
+}
+
+.game-card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35) !important;
+}
+
+/* 5. Botões Transparentes do Header (Carrinho e Perfil) */
+.btn-header-hover {
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+.btn-header-hover:hover {
+  background-color: rgba(124, 58, 237, 0.15) !important;
+  color: #7C3AED !important;
+}
+
+.btn-header-hover:hover svg {
+  color: #7C3AED !important;
+}
+
+.thumb-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover suave com brilho roxo e leve elevação */
+.thumb-hover:hover {
+  opacity: 1 !important;
+  transform: translateY(-2px);
+  border-color: #7C3AED !important;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.55) !important;
+}
+
+/* Quando a miniatura já está selecionada */
+.thumb-hover.border-primary {
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-bs-theme="light"] {
+  --bs-body-bg: #F8F9FA;          /* Cor de fundo do Figma */
+  --bs-body-color: #0F172A;       /* Cor do texto principal */
+  --bs-tertiary-bg: #FFFFFF;      /* Fundo dos cards / inputs */
+}
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: #0F0C1B;          /* Roxo/Cinza bem escuro do seu Figma */
+  --bs-body-color: #F3F4F6;       /* Texto claro */
+  --bs-tertiary-bg: #1A162B;      /* Cards e inputs no modo escuro */
+}
+
+.tag-pill {
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+    cursor: default;
+    border: 1px solid transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* camada do gradiente animado (fica escondida até o hover) */
+.tag-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(120deg, #5B21B6, #6D28D9, #7C3AED, #8B5CF6, #7C3AED, #5B21B6);
+    background-size: 300% 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: tag-flow 3s linear infinite;
+}
+
+.tag-pill:hover {
+    color: #fff !important;
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+}
+
+.tag-pill:hover::before {
+    opacity: 1;
+}
+
+@keyframes tag-flow {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
