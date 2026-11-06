@@ -1,0 +1,21 @@
+.form :global(.form-control:focus) {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.12);
+}
+
+.form :global(.form-check-input:checked) {
+    background-color: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.form :global(.form-check-input:focus) {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.12);
+}
+
+@media (min-width: 992px) {
+    .preview {
+        position: sticky;
+        top: 108px;
+    }
+}

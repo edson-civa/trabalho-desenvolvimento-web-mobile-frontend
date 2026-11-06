@@ -2,60 +2,70 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { GAMES_LIST, Game } from '@/data/games';
+import { ImageOff } from 'lucide-react';
 import Header from '@/components/Header';
+import Link from 'next/link';
+import ApiState from '@/components/ApiState';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiRequest, ApiError } from '@/lib/api';
+import { getUserGameAccess, toStoreGame, formatCurrency } from '@/lib/games';
+import type { ApiGame, StoreGame } from '@/lib/games';
+import { addCartGame, readCartIds } from '@/lib/cart';
 
 export default function GameDetailPage() {
-    const params = useParams();
-    const gameId = Number(params.id);
-
-    const game: Game = GAMES_LIST.find((g) => g.id === gameId) || GAMES_LIST[0];
-
-    const images = game.screenshots && game.screenshots.length > 0
-        ? game.screenshots
-        : [game.imageUrl];
-
-    const [selectedImage, setSelectedImage] = useState<string>(images[0]);
-    const [addedToCart, setAddedToCart] = useState<boolean>(false);
-
-    useEffect(() => {
-        if (images.length > 0) {
-            setSelectedImage(images[0]);
-        }
-    }, [gameId]);
+    const { id } = useParams<{ id: string }>();
+    const { user, isReady } = useAuth();
+    const [game, setGame] = useState<StoreGame | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [requestCount, setRequestCount] = useState(0);
+    const [selectedImage, setSelectedImage] = useState('');
+    const [addedToCart, setAddedToCart] = useState(false);
+    const [purchased, setPurchased] = useState(false);
+    const [cartError, setCartError] = useState('');
 
     useEffect(() => {
-        if (game?.id) {
-            const savedCart = localStorage.getItem('playce_cart');
-            if (savedCart) {
-                try {
-                    const currentCart = JSON.parse(savedCart);
-                    const exists = currentCart.some((item: any) => item.id === game.id);
-                    setAddedToCart(exists); // Usa setAddedToCart em vez de setIsInCart
-                } catch {
-                    setAddedToCart(false);
-                }
+        if (!isReady) return;
+        const controller = new AbortController();
+        setLoading(true);
+        setError('');
+        async function loadGame() {
+            try {
+                if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new ApiError('Jogo não encontrado.', 404);
+                const [response, access] = await Promise.all([
+                    apiRequest<ApiGame>(`/games/${id}`, { signal: controller.signal }),
+                    user ? getUserGameAccess(controller.signal) : Promise.resolve(null),
+                ]);
+                if (controller.signal.aborted) return;
+                const result = toStoreGame(response, access?.discounts.get(response.id));
+                setGame(result);
+                setPurchased(access?.purchasedIds.has(result.id) ?? false);
+                setSelectedImage(result.screenshots?.[0] || result.imageUrl || '');
+            } catch (error) {
+                if (!controller.signal.aborted) setError(error instanceof ApiError && error.status === 404 ? 'Jogo não encontrado.' : 'Não foi possível carregar o jogo.');
+            } finally {
+                if (!controller.signal.aborted) setLoading(false);
             }
         }
-    }, [game?.id]);
+        loadGame();
+        return () => controller.abort();
+    }, [id, user?.sub, isReady, requestCount]);
+
+    useEffect(() => {
+        const update = () => setAddedToCart(readCartIds().includes(Number(id)));
+        update();
+        window.addEventListener('cartUpdated', update);
+        return () => window.removeEventListener('cartUpdated', update);
+    }, [id]);
 
     const handleAddToCart = () => {
-        try {
-            const existigCart = JSON.parse(localStorage.getItem('playce_cart') || '[]');
-
-            const exists = existigCart.some((item: Game) => item.id === game.id);
-            if (!exists) {
-                existigCart.push(game);
-                localStorage.setItem('playce_cart', JSON.stringify(existigCart));
-            }
-
-            setAddedToCart(true);
-            window.dispatchEvent(new Event('cartUpdated'));
-
-        } catch (err) {
-            console.error('Erro ao salvar no carrinho: ', err);
-        }
+        if (!game || purchased) return;
+        try { addCartGame(game.id); setCartError(''); }
+        catch { setCartError('Não foi possível adicionar o jogo ao carrinho.'); }
     };
+
+    if (loading || error || !game) return <div className="min-vh-100 bg-body text-body"><Header /><main className="container my-4" style={{ paddingTop: '100px' }}><ApiState loading={loading} message={loading ? 'Carregando jogo...' : error || 'Jogo não encontrado.'} onRetry={!loading ? () => setRequestCount((count) => count + 1) : undefined} /><Link href="/" className="text-body-secondary">Voltar para a loja</Link></main></div>;
+    const images = [...new Set([...(game.screenshots ?? []), game.imageUrl].filter(Boolean))];
 
     return (
         <div className="min-vh-100 bg-body text-body">
@@ -90,14 +100,17 @@ export default function GameDetailPage() {
 
                         {/* Imagem Principal */}
                         <div
-                            className="position-relative rounded-4 overflow-hidden mb-3 shadow-sm bg-body-tertiary"
+                            className="position-relative rounded-4 overflow-hidden mb-3 shadow-sm bg-body-tertiary d-flex align-items-center justify-content-center"
                             style={{ aspectRatio: '16/9', width: '100%' }}
                         >
-                            <img
-                                src={selectedImage}
+                            <ImageOff size={40} className="text-body-secondary" aria-hidden="true" />
+                            {selectedImage && <img
+                                key={selectedImage}
+                                src={selectedImage || undefined}
                                 alt={game.title}
-                                className="w-100 h-100 object-fit-cover"
-                            />
+                                className="position-absolute top-0 start-0 w-100 h-100 object-fit-contain bg-body-tertiary"
+                                onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                            />}
                         </div>
 
                         {/* Miniaturas */}
@@ -107,7 +120,7 @@ export default function GameDetailPage() {
                                     <div key={idx} className="col-3 col-md-2">
                                         <button
                                             onClick={() => setSelectedImage(img)}
-                                            className={`btn p-0 w-100 rounded-3 overflow-hidden border-2 thumb-hover ${selectedImage === img ? 'border-primary' : 'border-transparent opacity-75'
+                                            className={`btn position-relative p-0 w-100 rounded-3 overflow-hidden border-2 bg-body-tertiary thumb-hover ${selectedImage === img ? 'border-primary' : 'border-transparent opacity-75'
                                                 }`}
                                             style={{
                                                 aspectRatio: '16/9',
@@ -118,7 +131,7 @@ export default function GameDetailPage() {
                                             <img
                                                 src={img}
                                                 alt={`Screenshot ${idx + 1}`}
-                                                className="w-100 h-100 object-fit-cover"
+                                                className="position-absolute top-0 start-0 w-100 h-100 object-fit-contain"
                                             />
                                         </button>
                                     </div>
@@ -130,7 +143,7 @@ export default function GameDetailPage() {
                             <h2 className="fw-bold fs-4 mb-3 text-body">Sobre o jogo</h2>
                             <div className="text-body-secondary leading-relaxed" style={{ lineHeight: '1.8' }}>
                                 <p className="fs-5 fw-semibold text-body mb-3">
-                                    {game.title}: Sua jornada começa.
+                                    {game.description}
                                 </p>
                                 <p>
                                     {game.longDescription || game.description}
@@ -166,18 +179,17 @@ export default function GameDetailPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-body-secondary small mt-1">
-                                    Em até 3x sem juros no cartão
-                                </div>
+                                {game.lowestPrice !== game.finalPrice && <p className="small text-body-secondary mt-2 mb-0">Com seu plano: de {formatCurrency(game.lowestPrice)} a {game.price}. O valor final é definido na compra.</p>}
                             </div>
 
-                            <button
+                            {purchased ? <Link href="/biblioteca" className="btn w-100 py-3 rounded-3 fw-bold text-white mb-3" style={{ backgroundColor: '#7C3AED' }}>Na sua biblioteca</Link> : <button
                                 onClick={handleAddToCart}
                                 className="btn w-100 py-3 rounded-3 fw-bold text-white mb-3 buy-btn-hover"
                                 style={{ backgroundColor: '#7C3AED' }}
                             >
                                 {addedToCart ? '✓ Adicionado ao Carrinho!' : 'Comprar agora'}
-                            </button>
+                            </button>}
+                            {cartError && <p className="small text-danger" role="alert">{cartError}</p>}
 
                             <div className="text-body-secondary small text-center d-flex align-items-center justify-content-center gap-2">
                                 <span>⚡</span> Disponível na biblioteca após a compra
@@ -193,16 +205,12 @@ export default function GameDetailPage() {
 
                             <div className="d-flex flex-column gap-3 small">
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <span className="text-body-secondary">Desenvolvedora</span>
-                                    <span className="fw-semibold text-body">{game.developer || 'Playce Studio'}</span>
+                                    <span className="text-body-secondary">Publicado por</span>
+                                    <span className="fw-semibold text-body">{game.publisher}</span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <span className="text-body-secondary">Distribuidora</span>
-                                    <span className="fw-semibold text-body">{game.publisher || 'Playce Studio'}</span>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <span className="text-body-secondary">Lançamento</span>
-                                    <span className="fw-semibold text-body">{game.releaseDate || '2026'}</span>
+                                    <span className="text-body-secondary">Publicado em</span>
+                                    <span className="fw-semibold text-body">{game.releaseDate}</span>
                                 </div>
                             </div>
                         </div>

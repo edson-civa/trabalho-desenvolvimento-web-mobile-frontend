@@ -2,55 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronLeft, ShoppingBag } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ShoppingBag, Gamepad2 } from 'lucide-react';
 
-interface PromoGame {
-    id: number;
-    badge: string;
-    subtitle: string;
-    title: string;
-    description: string;
-    originalPrice: string;
-    discountPrice: string;
-    imageUrl: string;
-}
-
-const PROMO_GAMES: PromoGame[] = [
-    {
-        id: 10,
-        badge: '-30% DE DESCONTO',
-        subtitle: 'Oferta Destaque',
-        title: 'Afterlight: Reborn',
-        description: 'Explore um reino de ruínas ancestrais e descubra os segredos de uma civilização esquecida.',
-        originalPrice: 'R$ 185,90',
-        discountPrice: 'R$ 129,90',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop',
-    },
-    {
-        id: 20,
-        badge: '-50% DE DESCONTO',
-        subtitle: 'Especial da Semana',
-        title: 'Cyber Realm 2088',
-        description: 'Enfrente corporações em uma metrópole futurista repleta de perigos e segredos.',
-        originalPrice: 'R$ 199,00',
-        discountPrice: 'R$ 99,50',
-        imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop',
-    },
-];
+import type { Game } from '@/types/game';
+import { addCartGame } from '@/lib/cart';
 
 const CAROUSEL_DURATION = 5000;
 
-export default function PromoCarousel() {
+export default function PromoCarousel({ games }: { games: Game[] }) {
+    const promoGames = games.map((game) => ({ ...game, badge: game.discountBadge || 'Em destaque', subtitle: '', discountPrice: game.price }));
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [progress, setProgress] = useState(0);
     const router = useRouter();
 
-    const currentGame = PROMO_GAMES[currentIndex];
+    const currentGame = promoGames[currentIndex % promoGames.length];
+    const bannerImage = currentGame?.screenshots?.[0] || currentGame?.imageUrl;
 
     // Timer e Barra de Progresso
     useEffect(() => {
-        if (isPaused) return;
+        if (isPaused || !promoGames.length) return;
 
         const intervalTime = 50; 
         const step = (intervalTime / CAROUSEL_DURATION) * 100;
@@ -69,8 +40,8 @@ export default function PromoCarousel() {
 
 
     useEffect(() => {
-        if (progress >= 100) {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % PROMO_GAMES.length);
+        if (progress >= 100 && promoGames.length) {
+            setCurrentIndex((prevIndex) => (prevIndex + 1) % promoGames.length);
             setProgress(0);
         }
     }, [progress]);
@@ -83,11 +54,11 @@ export default function PromoCarousel() {
     };
 
     const handleNext = (e?: React.MouseEvent) => {
-        goToSlide((currentIndex + 1) % PROMO_GAMES.length, e);
+        goToSlide((currentIndex + 1) % promoGames.length, e);
     };
 
     const handlePrev = (e?: React.MouseEvent) => {
-        goToSlide((currentIndex - 1 + PROMO_GAMES.length) % PROMO_GAMES.length, e);
+        goToSlide((currentIndex - 1 + promoGames.length) % promoGames.length, e);
     };
 
     const handleCardClick = () => {
@@ -96,8 +67,16 @@ export default function PromoCarousel() {
 
     const handleBuyNow = (e: React.MouseEvent) => {
         e.stopPropagation();
-        router.push('/carrinho');
+
+        try {
+            addCartGame(currentGame.id);
+            router.push('/carrinho');
+        } catch (err) {
+            console.error('Erro ao adicionar jogo ao carrinho: ', err);
+        }
     };
+
+    if (!currentGame) return null;
 
     return (
         <section className="mb-5">
@@ -165,7 +144,7 @@ export default function PromoCarousel() {
 
                         {/* Indicadores de Slide */}
                         <div className="d-flex align-items-center gap-2 mt-3">
-                            {PROMO_GAMES.map((_, index) => (
+                            {promoGames.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={(e) => goToSlide(index, e)}
@@ -183,11 +162,14 @@ export default function PromoCarousel() {
 
                     {/* Coluna da Direita */}
                     <div className="col-lg-7 position-relative min-vh-25" style={{ minHeight: '380px' }}>
-                        <img
-                            src={currentGame.imageUrl}
+                        <Gamepad2 size={48} className="position-absolute top-50 start-50 translate-middle text-body-secondary" aria-hidden="true" />
+                        {bannerImage && <img
+                            key={bannerImage}
+                            src={bannerImage}
                             alt={currentGame.title}
-                            className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
-                        />
+                            className={`position-absolute top-0 start-0 w-100 h-100 ${currentGame.screenshots?.length ? 'object-fit-cover' : 'object-fit-contain'}`}
+                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                        />}
 
                         {/* Setas de Navegação */}
                         <div

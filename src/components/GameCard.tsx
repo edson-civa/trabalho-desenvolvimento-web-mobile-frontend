@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link';
-import { Game } from '@/data/games';
+import type { Game } from '@/types/game';
+import { Gamepad2 } from 'lucide-react';
 
 interface GameCardProps {
   game: Game;
@@ -11,20 +12,21 @@ export default function GameCard({ game }: GameCardProps) {
     return (
         <Link
             href={`/jogo/${game.id}`}
-            className='tect-decoration-none text-body d-block h-100 group game-card-hover'
+            className='text-decoration-none text-body d-block h-100 group game-card-hover'
         >
             <div className='d-flex flex-column h-100'>
 
                 <div
-                    className="position-relative rounded-4 overflow-hidden mb-2 shadow-sm bg-body-tertiary "
-                    style={{ aspectRatio: '3/4' }}
+                    className="game-cover-frame rounded-4 mb-2 shadow-sm bg-body-tertiary"
                 >
-                    <img    
+                    <Gamepad2 size={32} className="position-absolute top-50 start-50 translate-middle text-body-secondary" aria-hidden="true" />
+                    {game.imageUrl && <img
                         src={game.imageUrl}
                         alt={game.title}
-                        className='w-100 h-100 object-fit-cover transition-transform'
+                        className='transition-transform'
                         style={{ transition: 'transform 0.3s ease'}}
-                    />
+                        onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                    />}
 
                     {game.discountBadge && (
                         <span
@@ -38,7 +40,7 @@ export default function GameCard({ game }: GameCardProps) {
 
                 <div className="d-flex flex-column justify-content-between flex-grow-1">
                     <div>
-                        <h3 className='fw-bold fs-6 mb-0 text-truncate" title={game.title}'>
+                        <h3 className="fw-bold fs-6 mb-0 text-truncate" title={game.title}>
                             {game.title}
                         </h3>
 

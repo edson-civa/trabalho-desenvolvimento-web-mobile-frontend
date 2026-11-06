@@ -1,68 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft, ShieldCheck } from 'lucide-react';
-import { Game } from '@/data/games';
 import Header from '@/components/Header';
+import ApiState from '@/components/ApiState';
+import { useCart } from '@/hooks/useCart';
+import { formatCurrency } from '@/lib/games';
 
 export default function CartPage() {
     const router = useRouter();
-    const [cartItems, setCartItems] = useState<Game[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        try {
-            const savedCart = localStorage.getItem('playce_cart');
-            if (savedCart) {
-                setCartItems(JSON.parse(savedCart));
-            }
-        } catch (err) {
-            console.error('erro ao ler item do carrinho: ', err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const parsePrice = (priceStr: string): number => {
-        if (!priceStr) return 0;
-        const numericStr = priceStr
-            .replace('R$', '')
-            .replace(/\./g, '')
-            .replace(',', '.')
-            .trim();
-        return parseFloat(numericStr) || 0;
-    };
-
-    const formatCurrency = (val: number): string => {
-        return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    };
-
+    const { items: cartItems, loading, error, notice, subtotal, total, discount, estimated, retry, remove } = useCart();
+    const [removeError, setRemoveError] = useState('');
     const handleRemoveItem = (id: number) => {
-        const updated = cartItems.filter((item) => item.id !== id);
-        setCartItems(updated);
-        localStorage.setItem('playce_cart', JSON.stringify(updated));
-        window.dispatchEvent(new Event('cartUpdated'));
+        try { remove(id); setRemoveError(''); }
+        catch { setRemoveError('Não foi possível remover o jogo. Tente novamente.'); }
     };
+    const handleProceedToCheckout = () => router.push('/checkout');
 
-    const subtotal = cartItems.reduce((acc, item) => acc + parsePrice(item.price), 0);
-    const total = subtotal;
-    const installmentValue = total > 0 ? total / 3 : 0;
-
-    const handleProceedToCheckout = () => {
-        router.push('/checkout');
-    };
-
-    if (loading) {
-        return (
-            <main className="container-xxl my-4 px-3 px-md-4" style={{ paddingTop: '100px' }}>
-                <div className="text-center text-body-secondary py-5">
-                    <p className="fs-5">Carregando seu carrinho...</p>
-                </div>
-            </main>
-        );
-    }
+    if (loading || error) return <div className="min-vh-100 bg-body text-body"><Header /><main className="container my-4" style={{ paddingTop: '100px' }}><ApiState loading={loading} message={loading ? 'Carregando carrinho...' : error} onRetry={error ? retry : undefined} /></main></div>;
 
     return (
         <div className='min-vh-100 bg-body text-body'>
@@ -70,6 +27,8 @@ export default function CartPage() {
             <Header />
 
             <main className="container-xxl my-4 px-3 px-md-4" style={{ paddingTop: '90px' }}>
+                {notice && <p className="small text-body-secondary" role="status">{notice}</p>}
+                {removeError && <p className="small text-danger" role="alert">{removeError}</p>}
 
                 {/* Botão de voltar */}
                 <div className="mb-3">
@@ -85,7 +44,7 @@ export default function CartPage() {
                 <div className="mb-4">
                     <h1 className="fw-bold fs-2 text-body mb-1">Seu carrinho</h1>
                     <p className="text-body-secondary mb-0">
-                        Confira seus jogos antes de continuar para o pagamento.
+                        Confira seus jogos antes de continuar para a confirmação.
                     </p>
                     {cartItems.length === 0 ? (
                         /* Estado Vazio */
@@ -126,16 +85,14 @@ export default function CartPage() {
                                             >
                                                 <div className="d-flex align-items-center gap-3">
                                                     <img
-                                                        src={item.imageUrl || item.screenshots?.[0]}
+                                                        src={item.imageUrl || item.screenshots?.[0] || undefined}
                                                         alt={item.title}
-                                                        className="rounded-3 object-fit-cover"
-                                                        style={{ width: '100px', height: '60px' }}
+                                                        className="rounded-3 object-fit-cover flex-shrink-0"
+                                                        style={{ width: '64px', height: '96px' }}
                                                     />
                                                     <div>
                                                         <h3 className="fw-bold fs-6 text-body mb-1">{item.title}</h3>
-                                                        <div className="text-body-secondary extra-small">
-                                                            Edição padrão · {item.platform || 'PC Windows'}
-                                                        </div>
+
                                                         <button
                                                             onClick={() => handleRemoveItem(item.id)}
                                                             className="btn btn-link p-0 text-danger text-decoration-none small d-inline-flex align-items-center gap-1 mt-1"
@@ -178,7 +135,7 @@ export default function CartPage() {
                                 </div>
                             </div>
 
-                            {/* COLUNA DIREITA: RESUMO DO PEDIDO */}
+                            {/* COLUNA DIREITA*/}
                             <div className="w-100" style={{ maxWidth: '380px' }}>
                                 <div className="p-4 rounded-4 bg-body-tertiary border border-body-subtle shadow-sm">
 
@@ -191,7 +148,7 @@ export default function CartPage() {
                                         </div>
                                         <div className="d-flex justify-content-between text-body-secondary">
                                             <span>Descontos</span>
-                                            <span className="text-body fw-semibold">R$ 0,00</span>
+                                            <span className="text-body fw-semibold">{formatCurrency(discount)}</span>
                                         </div>
                                         <div className="d-flex justify-content-between text-body-secondary">
                                             <span>Taxas adicionais</span>
@@ -205,11 +162,8 @@ export default function CartPage() {
                                             <span className="fw-bold fs-5 text-body">Total</span>
                                             <span className="fw-bold fs-3 text-body">{formatCurrency(total)}</span>
                                         </div>
-                                        {total > 0 && (
-                                            <div className="text-body-secondary extra-small">
-                                                Em até 3x de {formatCurrency(installmentValue)} sem juros
-                                            </div>
-                                        )}
+                                        {estimated && <p className="small text-body-secondary mb-0">Total estimado. O desconto do plano varia e o valor final é definido ao concluir a compra.</p>}
+
                                     </div>
 
                                     {/* Botão de Checkout */}
@@ -218,12 +172,8 @@ export default function CartPage() {
                                         className="btn w-100 py-3 rounded-3 fw-bold text-white mb-3 buy-btn-hover"
                                         style={{ backgroundColor: '#7C3AED' }}
                                     >
-                                        Continuar para o pagamento →
+                                        Continuar para confirmação →
                                     </button>
-
-                                    <p className="text-body-secondary extra-small text-center mb-3" style={{ fontSize: '0.78rem' }}>
-                                        Você poderá escolher a forma de pagamento na próxima etapa. Nenhuma cobrança será feita agora.
-                                    </p>
 
                                     <div className="text-body-secondary extra-small d-flex align-items-center justify-content-center gap-1 text-center" style={{ fontSize: '0.8rem' }}>
                                         <ShieldCheck size={16} className="text-success" />

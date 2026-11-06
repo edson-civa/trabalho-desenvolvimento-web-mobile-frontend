@@ -1,0 +1,36 @@
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: rgba(124, 58, 237, 0.025);
+}
+
+.table thead th {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-secondary-color);
+    border-bottom: 0;
+    padding: 14px 16px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.table thead th:first-child { border-radius: 10px 0 0 10px; }
+.table thead th:last-child { border-radius: 0 10px 10px 0; }
+.table tbody td { padding: 20px 16px; }
+.table tbody tr:last-child td { border-bottom: 0; }
+
+.manageLink {
+    color: #7c3aed;
+    transition: background-color 0.2s ease;
+}
+
+.manageLink:hover {
+    color: #6d28d9;
+    background-color: rgba(124, 58, 237, 0.08);
+}
+
+.controls :global(.form-control:focus),
+.controls :global(.form-select:focus) {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.12);
+}

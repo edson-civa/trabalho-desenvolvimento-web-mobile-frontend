@@ -1,6 +1,6 @@
 'use client'
 
-import { Game } from '@/data/games';
+import type { Game } from '@/types/game';
 import GameCard from './GameCard';
 
 interface GameSectionProps {

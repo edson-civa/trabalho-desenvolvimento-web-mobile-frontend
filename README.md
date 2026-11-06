@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# Playce
 
-## Getting Started
+Frontend de uma loja de jogos, desenvolvido com Next.js, React, TypeScript e Bootstrap.
 
-First, run the development server:
+## Executar
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Instale as dependências com `npm ci`.
+2. Copie `.env.example` para `.env.local` e ajuste `API_URL` para o endereço da API NestJS, incluindo `/api`.
+3. Inicie o backend e execute `npm run dev` neste projeto.
+4. Acesse `http://localhost:3000`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para executar a versão de produção, use `npm run build` e depois `npm start`. O backend deve continuar disponível no endereço configurado. Reinicie o frontend após alterar a configuração da API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Funcionalidades
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Catálogo público, busca e detalhes dos jogos.
+- Cadastro, login e acesso conforme o perfil do usuário.
+- Carrinho, registro de compras e biblioteca.
+- Planos e assinaturas com acesso temporário e descontos.
+- Publicação e edição de jogos.
+- Administração de usuários e catálogo, com resumo de vendas.
 
-## Learn More
+As telas utilizam a API. A instalação de jogos, a execução e as conquistas são demonstrações locais; o pagamento não realiza cobranças reais.
 
-To learn more about Next.js, take a look at the following resources:
+## Organização
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `src/app`: páginas e proteção das rotas.
+- `src/components`: componentes compartilhados.
+- `src/contexts`: estado de autenticação.
+- `src/hooks`: lógica compartilhada do carrinho.
+- `src/lib`: comunicação com a API, sessão e adaptação dos dados.
+- `src/types`: tipos compartilhados da interface.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para conferir o código, use `npm run lint` e `npx tsc --noEmit`.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Para a entrega do código, não é necessário incluir `node_modules` nem `.next`: essas pastas são geradas pelos comandos de instalação e execução. Configure o ambiente com `.env.example`.

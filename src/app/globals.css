@@ -80,6 +80,23 @@ a {
 }
 
 /* 4. Cards de Jogos (Grid) */
+.game-cover-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.game-cover-frame img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .game-card-hover {
   display: block;
   text-decoration: none;

@@ -1,0 +1,31 @@
+.card {
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+}
+
+.featured {
+    border-color: #7c3aed;
+}
+
+.benefitIcon {
+    color: #7c3aed;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.accountNotice {
+    background-color: rgba(124, 58, 237, 0.08);
+}
+
+.textLink {
+    color: #7c3aed;
+}
+
+.textLink:hover {
+    color: #6d28d9;
+}
+
+.planAction:disabled {
+    opacity: 0.65;
+}
+
