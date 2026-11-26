@@ -90,22 +90,21 @@ export default function Header() {
 
 
     return (
-        <header className="fixed-top bg-body border-bottom py-3 px-3 px-md-4 shadow-sm" style={{ zIndex: 1050 }}>
-            <div className="container-fluid d-flex align-items-center justify-content-between">
+        <header className="store-header fixed-top bg-body border-bottom py-2 py-sm-3 px-3 px-md-4 shadow-sm" style={{ zIndex: 1050 }}>
+            <div className="container-fluid store-header-inner">
 
                 {/* Lado Esquerdo: Logo e Navegação */}
-                <div className="d-flex align-items-center gap-3">
-                    <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
+                    <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none" aria-label="Playce — página inicial">
                         <div
                             className="text-white rounded-3 d-flex align-items-center justify-content-center"
                             style={{ width: '38px', height: '38px', backgroundColor: '#7C3AED' }}
                         >
                             <Play size={18} fill="white" className="ms-1" />
                         </div>
-                        <span className="fw-bold fs-4 text-body ms-1 d-none d-sm-inline">Playce</span>
+                        <span className="fw-bold fs-4 text-body ms-1">Playce</span>
                     </Link>
 
-                    <nav className="d-flex gap-2 gap-sm-3 ms-sm-3 small" aria-label="Navegação principal">
+                    <nav className="store-header-nav d-flex gap-2 gap-sm-3 ms-sm-3 small" aria-label="Navegação principal">
                         <Link href="/" className="text-decoration-none fw-semibold text-body">
                             Loja
                         </Link>
@@ -117,11 +116,10 @@ export default function Header() {
                             Planos
                         </Link>
                     </nav>
-                </div>
 
 
                 {/* Lado Direito: Busca Interativa e Ícones */}
-                <div className="d-flex align-items-center gap-2 gap-md-3">
+                <div className="store-header-actions d-flex align-items-center gap-2 gap-md-3">
 
                     {/* campo de busca  */}
 
@@ -218,6 +216,8 @@ export default function Header() {
                             className="btn btn-body-tertiary text-body rounded-3 d-flex align-items-center justify-content-center p-0 border-0 btn-header-hover"
                             style={{ width: '40px', height: '40px' }}
                             aria-label="Perfil"
+                            aria-expanded={isUserMenuOpen}
+                            aria-controls="header-user-menu"
                         >
                             <User size={20} className="text-body" />
                         </button>
@@ -226,6 +226,7 @@ export default function Header() {
 
                         {isUserMenuOpen && (
                             <div
+                                id="header-user-menu"
                                 className="position-absolute end-0 mt-2 bg-body border rounded-3 shadow-lg p-2 border z-3"
                                 style={{ width: '220px', top: '100%', zIndex: 1060}}
                             >
